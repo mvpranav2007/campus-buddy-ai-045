@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +78,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Scholar — AI Student Assistance Chatbot" },
+      {
+        name: "description",
+        content:
+          "Scholar is an AI chatbot for students — get instant help with courses, exams, attendance, fees, scholarships, placements, library and hostel questions.",
+      },
+      { name: "author", content: "Scholar" },
+      { property: "og:title", content: "Scholar — AI Student Assistance Chatbot" },
+      { property: "og:description", content: "Every campus question, answered. 24/7." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -92,6 +96,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        children: `
+          try {
+            var s = localStorage.getItem('scholar-theme');
+            var d = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (d) document.documentElement.classList.add('dark');
+          } catch (_) {}
+        `,
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -121,6 +136,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
 }
