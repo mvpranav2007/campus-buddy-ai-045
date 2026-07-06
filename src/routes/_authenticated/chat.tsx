@@ -24,7 +24,7 @@ import { loadMessages, saveMessages, clearMessages } from "@/lib/chat-storage";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute("/_authenticated/chat")({
   head: () => ({
     meta: [
       { title: "Chat · Scholar" },
