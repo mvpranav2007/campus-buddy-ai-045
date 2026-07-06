@@ -86,9 +86,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "author", content: "Scholar" },
       { property: "og:title", content: "Scholar — AI Student Assistance Chatbot" },
-      { property: "og:description", content: "Every campus question, answered. 24/7." },
+      { property: "og:description", content: "Scholar is an AI chatbot that helps students with courses, exams, attendance, fees, scholarships, placements, library and hostel questions — 24/7." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Scholar — AI Student Assistance Chatbot" },
+      { name: "description", content: "Scholar is an AI chatbot that helps students with courses, exams, attendance, fees, scholarships, placements, library and hostel questions — 24/7." },
+      { name: "twitter:description", content: "Scholar is an AI chatbot that helps students with courses, exams, attendance, fees, scholarships, placements, library and hostel questions — 24/7." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60e4be18-bf03-4edb-aa41-dfd200a91ab6/id-preview-22755639--fb0dc015-2d54-4968-870d-093a0e1a2f2a.lovable.app-1783357969309.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/60e4be18-bf03-4edb-aa41-dfd200a91ab6/id-preview-22755639--fb0dc015-2d54-4968-870d-093a0e1a2f2a.lovable.app-1783357969309.png" },
     ],
     links: [
       {
