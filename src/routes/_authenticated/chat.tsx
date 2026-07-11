@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,9 +18,10 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
+import { History, LogOut, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { loadMessages, saveMessages, clearMessages } from "@/lib/chat-storage";
+import { saveChatTurn } from "@/lib/chat-history";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
