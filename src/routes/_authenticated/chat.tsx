@@ -202,7 +202,7 @@ function ChatInner({
                       <button
                         key={s.text}
                         type="button"
-                        onClick={() => sendMessage({ text: s.text })}
+                        onClick={() => send(s.text)}
                         className="group flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm shadow-soft transition hover:border-primary/40 hover:shadow-glow"
                       >
                         <span className="text-lg leading-none pt-0.5">{s.icon}</span>
@@ -248,7 +248,7 @@ function ChatInner({
             onSubmit={async (message) => {
               const text = message.text.trim();
               if (!text || isBusy) return;
-              await sendMessage({ text });
+              await send(text);
             }}
             className="shadow-soft"
           >
