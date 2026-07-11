@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,9 +18,10 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, LogOut, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
+import { History, LogOut, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { loadMessages, saveMessages, clearMessages } from "@/lib/chat-storage";
+import { saveChatTurn } from "@/lib/chat-history";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
@@ -102,12 +103,25 @@ function ChatInner({
   onClear: () => void;
   inputRef: React.MutableRefObject<HTMLTextAreaElement | null>;
 }) {
+  const lastQuestionRef = useRef<string>("");
   const { messages, sendMessage, status } = useChat({
     id: "scholar-single",
     messages: initialMessages,
     transport,
     onError: (err) => {
       toast.error(err.message || "Something went wrong");
+    },
+    onFinish: ({ message }) => {
+      const answer = message.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as { text: string }).text)
+        .join("")
+        .trim();
+      const question = lastQuestionRef.current.trim();
+      if (!question || !answer) return;
+      void saveChatTurn(question, answer).then(({ error }) => {
+        if (error) console.error("save chat_history failed", error);
+      });
     },
   });
 
@@ -125,6 +139,11 @@ function ChatInner({
   const isBusy = status === "submitted" || status === "streaming";
   const empty = messages.length === 0;
 
+  const send = async (text: string) => {
+    lastQuestionRef.current = text;
+    await sendMessage({ text });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gradient-surface">
       <header className="flex items-center justify-between border-b border-border/60 bg-background/60 px-4 py-3 backdrop-blur">
@@ -137,6 +156,9 @@ function ChatInner({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="hidden sm:inline text-xs text-muted-foreground mr-2 truncate max-w-[14rem]">{email}</span>
+          <Button size="icon-sm" variant="ghost" asChild title="Chat history">
+            <Link to="/history"><History className="size-4" /></Link>
+          </Button>
           <Button size="icon-sm" variant="ghost" onClick={onClear} title="Clear conversation">
             <Trash2 className="size-4" />
           </Button>
@@ -183,7 +205,7 @@ function ChatInner({
                       <button
                         key={s.text}
                         type="button"
-                        onClick={() => sendMessage({ text: s.text })}
+                        onClick={() => send(s.text)}
                         className="group flex items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm shadow-soft transition hover:border-primary/40 hover:shadow-glow"
                       >
                         <span className="text-lg leading-none pt-0.5">{s.icon}</span>
@@ -229,7 +251,7 @@ function ChatInner({
             onSubmit={async (message) => {
               const text = message.text.trim();
               if (!text || isBusy) return;
-              await sendMessage({ text });
+              await send(text);
             }}
             className="shadow-soft"
           >
