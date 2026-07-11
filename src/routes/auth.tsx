@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, GraduationCap } from "lucide-react";
+import { Loader2, GraduationCap, MailCheck } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
@@ -25,6 +25,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -34,28 +35,45 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
     setLoading(true);
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/chat` },
+          options: { emailRedirectTo: window.location.origin },
         });
-        if (error) throw error;
-        // If no session was returned, the email is already registered
-        // (Supabase returns an obfuscated user with no session in that case).
+        if (error) {
+          if (isAlreadyRegisteredError(error)) {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password,
+            });
+
+            if (!signInError) {
+              toast.success("Account already exists. You're signed in now.");
+              navigate({ to: "/chat" });
+              return;
+            }
+
+            setMode("signin");
+            toast.error("This email already has an account, but that password doesn't match. Use Forgot password to reset it.");
+            return;
+          }
+          throw error;
+        }
         if (!data.session) {
-          toast.error("This email is already registered. Please sign in instead.");
           setMode("signin");
+          toast.info("Account found. Please sign in, or reset your password if you don't remember it.");
           return;
         }
         toast.success("Account created. You're signed in.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) {
           if (error.message.toLowerCase().includes("invalid")) {
-            throw new Error("Invalid email or password. Please try again.");
+            throw new Error("Invalid email or password. If this email is already registered, use Forgot password to set a new password.");
           }
           throw error;
         }
@@ -66,6 +84,27 @@ function AuthPage() {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      toast.error("Enter your email first, then tap Forgot password.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent. Check your email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset link");
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -128,7 +167,19 @@ function AuthPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="password">Password</Label>
+                {mode === "signin" ? (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading || loading}
+                    className="text-xs font-medium text-primary hover:underline disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    {resetLoading ? "Sending…" : "Forgot password?"}
+                  </button>
+                ) : null}
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -140,6 +191,15 @@ function AuthPage() {
                 placeholder="At least 6 characters"
               />
             </div>
+
+            {mode === "signup" ? (
+              <div className="flex gap-2 rounded-md border border-border bg-muted/45 p-3 text-xs text-muted-foreground">
+                <MailCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                <p>
+                  If this email already has an account, we'll sign you in when the password matches.
+                </p>
+              </div>
+            ) : null}
 
             <Button type="submit" disabled={loading} className="w-full h-11 text-base shadow-glow">
               {loading ? <Loader2 className="size-4 animate-spin" /> : mode === "signin" ? "Sign in" : "Create account"}
@@ -160,4 +220,9 @@ function AuthPage() {
       </div>
     </div>
   );
+}
+
+function isAlreadyRegisteredError(error: { message?: string; code?: string }) {
+  const message = error.message?.toLowerCase() ?? "";
+  return error.code === "user_already_exists" || message.includes("already registered") || message.includes("already exists");
 }
