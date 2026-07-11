@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, GraduationCap } from "lucide-react";
+import { Loader2, GraduationCap, MailCheck } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/auth")({
@@ -25,6 +25,8 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [accountNotice, setAccountNotice] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -34,39 +36,83 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const cleanEmail = email.trim().toLowerCase();
+    setAccountNotice("");
     setLoading(true);
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/chat` },
+          options: { emailRedirectTo: window.location.origin },
         });
-        if (error) throw error;
-        // If no session was returned, the email is already registered
-        // (Supabase returns an obfuscated user with no session in that case).
+        if (error) {
+          if (isAlreadyRegisteredError(error)) {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password,
+            });
+
+            if (!signInError) {
+              toast.success("Account already exists. You're signed in now.");
+              navigate({ to: "/chat" });
+              return;
+            }
+
+            setMode("signin");
+            setAccountNotice("This email already has an account. Sign in with the correct password, or use Forgot password to set a new one.");
+            return;
+          }
+          throw new Error(getFriendlyAuthMessage(error));
+        }
         if (!data.session) {
-          toast.error("This email is already registered. Please sign in instead.");
           setMode("signin");
+          setAccountNotice("Account found. Please sign in, or reset your password if you don't remember it.");
           return;
         }
         toast.success("Account created. You're signed in.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
         if (error) {
           if (error.message.toLowerCase().includes("invalid")) {
-            throw new Error("Invalid email or password. Please try again.");
+            throw new Error("Invalid email or password. If this email is already registered, use Forgot password to set a new password.");
           }
-          throw error;
+          throw new Error(getFriendlyAuthMessage(error));
         }
         toast.success("Welcome back.");
       }
       navigate({ to: "/chat" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(getFriendlyAuthMessage(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleForgotPassword() {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      toast.error("Enter your email first, then tap Forgot password.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent. Check your email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset link");
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  function switchMode(nextMode: "signin" | "signup") {
+    setMode(nextMode);
+    setAccountNotice("");
   }
 
   return (
@@ -115,6 +161,12 @@ function AuthPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {accountNotice ? (
+              <div className="rounded-md border border-primary/25 bg-primary/10 p-3 text-sm text-foreground">
+                {accountNotice}
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -125,10 +177,23 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@campus.edu"
+                onFocus={() => setAccountNotice("")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="password">Password</Label>
+                {mode === "signin" ? (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading || loading}
+                    className="text-xs font-medium text-primary hover:underline disabled:pointer-events-none disabled:opacity-60"
+                  >
+                    {resetLoading ? "Sending…" : "Forgot password?"}
+                  </button>
+                ) : null}
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -136,10 +201,22 @@ function AuthPage() {
                 required
                 minLength={6}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setAccountNotice("");
+                }}
                 placeholder="At least 6 characters"
               />
             </div>
+
+            {mode === "signup" ? (
+              <div className="flex gap-2 rounded-md border border-border bg-muted/45 p-3 text-xs text-muted-foreground">
+                <MailCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                <p>
+                  If this email already has an account, we'll sign you in when the password matches.
+                </p>
+              </div>
+            ) : null}
 
             <Button type="submit" disabled={loading} className="w-full h-11 text-base shadow-glow">
               {loading ? <Loader2 className="size-4 animate-spin" /> : mode === "signin" ? "Sign in" : "Create account"}
@@ -151,7 +228,7 @@ function AuthPage() {
             <button
               type="button"
               className="font-medium text-primary hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
             >
               {mode === "signin" ? "Create an account" : "Sign in"}
             </button>
@@ -160,4 +237,25 @@ function AuthPage() {
       </div>
     </div>
   );
+}
+
+function isAlreadyRegisteredError(error: { message?: string; code?: string }) {
+  const message = error.message?.toLowerCase() ?? "";
+  return error.code === "user_already_exists" || message.includes("already registered") || message.includes("already exists");
+}
+
+function getFriendlyAuthMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "");
+    const lower = message.toLowerCase();
+    if (lower.includes("already registered") || lower.includes("already exists")) {
+      return "This email already has an account. Sign in instead, or use Forgot password.";
+    }
+    if (lower.includes("invalid login credentials") || lower.includes("invalid email or password")) {
+      return "Invalid email or password. If this email is already registered, use Forgot password to set a new password.";
+    }
+    return message || "Something went wrong";
+  }
+
+  return "Something went wrong";
 }
