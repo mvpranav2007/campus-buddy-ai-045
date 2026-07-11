@@ -103,12 +103,25 @@ function ChatInner({
   onClear: () => void;
   inputRef: React.MutableRefObject<HTMLTextAreaElement | null>;
 }) {
+  const lastQuestionRef = useRef<string>("");
   const { messages, sendMessage, status } = useChat({
     id: "scholar-single",
     messages: initialMessages,
     transport,
     onError: (err) => {
       toast.error(err.message || "Something went wrong");
+    },
+    onFinish: ({ message }) => {
+      const answer = message.parts
+        .filter((p) => p.type === "text")
+        .map((p) => (p as { text: string }).text)
+        .join("")
+        .trim();
+      const question = lastQuestionRef.current.trim();
+      if (!question || !answer) return;
+      void saveChatTurn(question, answer).then(({ error }) => {
+        if (error) console.error("save chat_history failed", error);
+      });
     },
   });
 
