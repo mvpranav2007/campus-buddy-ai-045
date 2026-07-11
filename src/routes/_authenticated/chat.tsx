@@ -156,6 +156,9 @@ function ChatInner({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="hidden sm:inline text-xs text-muted-foreground mr-2 truncate max-w-[14rem]">{email}</span>
+          <Button size="icon-sm" variant="ghost" asChild title="Chat history">
+            <Link to="/history"><History className="size-4" /></Link>
+          </Button>
           <Button size="icon-sm" variant="ghost" onClick={onClear} title="Clear conversation">
             <Trash2 className="size-4" />
           </Button>
