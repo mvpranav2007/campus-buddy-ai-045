@@ -139,6 +139,11 @@ function ChatInner({
   const isBusy = status === "submitted" || status === "streaming";
   const empty = messages.length === 0;
 
+  const send = async (text: string) => {
+    lastQuestionRef.current = text;
+    await sendMessage({ text });
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gradient-surface">
       <header className="flex items-center justify-between border-b border-border/60 bg-background/60 px-4 py-3 backdrop-blur">
