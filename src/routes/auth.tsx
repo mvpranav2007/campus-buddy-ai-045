@@ -26,6 +26,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [accountNotice, setAccountNotice] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -36,6 +37,7 @@ function AuthPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
+    setAccountNotice("");
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -58,14 +60,14 @@ function AuthPage() {
             }
 
             setMode("signin");
-            toast.error("This email already has an account, but that password doesn't match. Use Forgot password to reset it.");
+            setAccountNotice("This email already has an account. Sign in with the correct password, or use Forgot password to set a new one.");
             return;
           }
-          throw error;
+          throw new Error(getFriendlyAuthMessage(error));
         }
         if (!data.session) {
           setMode("signin");
-          toast.info("Account found. Please sign in, or reset your password if you don't remember it.");
+          setAccountNotice("Account found. Please sign in, or reset your password if you don't remember it.");
           return;
         }
         toast.success("Account created. You're signed in.");
@@ -75,13 +77,13 @@ function AuthPage() {
           if (error.message.toLowerCase().includes("invalid")) {
             throw new Error("Invalid email or password. If this email is already registered, use Forgot password to set a new password.");
           }
-          throw error;
+          throw new Error(getFriendlyAuthMessage(error));
         }
         toast.success("Welcome back.");
       }
       navigate({ to: "/chat" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(getFriendlyAuthMessage(err));
     } finally {
       setLoading(false);
     }
@@ -106,6 +108,11 @@ function AuthPage() {
     } finally {
       setResetLoading(false);
     }
+  }
+
+  function switchMode(nextMode: "signin" | "signup") {
+    setMode(nextMode);
+    setAccountNotice("");
   }
 
   return (
@@ -154,6 +161,12 @@ function AuthPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+            {accountNotice ? (
+              <div className="rounded-md border border-primary/25 bg-primary/10 p-3 text-sm text-foreground">
+                {accountNotice}
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -164,6 +177,7 @@ function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@campus.edu"
+                onFocus={() => setAccountNotice("")}
               />
             </div>
             <div className="space-y-2">
@@ -187,7 +201,10 @@ function AuthPage() {
                 required
                 minLength={6}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setAccountNotice("");
+                }}
                 placeholder="At least 6 characters"
               />
             </div>
@@ -211,7 +228,7 @@ function AuthPage() {
             <button
               type="button"
               className="font-medium text-primary hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+              onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
             >
               {mode === "signin" ? "Create an account" : "Sign in"}
             </button>
@@ -225,4 +242,20 @@ function AuthPage() {
 function isAlreadyRegisteredError(error: { message?: string; code?: string }) {
   const message = error.message?.toLowerCase() ?? "";
   return error.code === "user_already_exists" || message.includes("already registered") || message.includes("already exists");
+}
+
+function getFriendlyAuthMessage(error: unknown) {
+  if (error && typeof error === "object" && "message" in error) {
+    const message = String((error as { message?: unknown }).message ?? "");
+    const lower = message.toLowerCase();
+    if (lower.includes("already registered") || lower.includes("already exists")) {
+      return "This email already has an account. Sign in instead, or use Forgot password.";
+    }
+    if (lower.includes("invalid login credentials") || lower.includes("invalid email or password")) {
+      return "Invalid email or password. If this email is already registered, use Forgot password to set a new password.";
+    }
+    return message || "Something went wrong";
+  }
+
+  return "Something went wrong";
 }
