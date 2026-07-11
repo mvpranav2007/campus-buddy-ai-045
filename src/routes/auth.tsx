@@ -37,16 +37,28 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/chat` },
         });
         if (error) throw error;
+        // If no session was returned, the email is already registered
+        // (Supabase returns an obfuscated user with no session in that case).
+        if (!data.session) {
+          toast.error("This email is already registered. Please sign in instead.");
+          setMode("signin");
+          return;
+        }
         toast.success("Account created. You're signed in.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message.toLowerCase().includes("invalid")) {
+            throw new Error("Invalid email or password. Please try again.");
+          }
+          throw error;
+        }
         toast.success("Welcome back.");
       }
       navigate({ to: "/chat" });
