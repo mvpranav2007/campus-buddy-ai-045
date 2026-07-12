@@ -18,7 +18,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
-import { History, LogOut, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
+import { History, LogOut, MessagesSquare, Moon, Sun, Trash2, MessageCircle } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { loadMessages, saveMessages, clearMessages } from "@/lib/chat-storage";
 import { saveChatTurn } from "@/lib/chat-history";
@@ -156,6 +156,9 @@ function ChatInner({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="hidden sm:inline text-xs text-muted-foreground mr-2 truncate max-w-[14rem]">{email}</span>
+          <Button size="icon-sm" variant="ghost" asChild title="Messages">
+            <Link to="/messages"><MessagesSquare className="size-4" /></Link>
+          </Button>
           <Button size="icon-sm" variant="ghost" asChild title="Chat history">
             <Link to="/history"><History className="size-4" /></Link>
           </Button>

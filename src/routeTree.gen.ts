@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -51,6 +52,12 @@ const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMessagesIndexRoute =
+  AuthenticatedMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/messages/': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -67,6 +75,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/messages': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -77,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,8 +97,16 @@ export interface FileRouteTypes {
     | '/chat'
     | '/history'
     | '/api/chat'
+    | '/messages/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/reset-password' | '/chat' | '/history' | '/api/chat'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/chat'
+    | '/history'
+    | '/api/chat'
+    | '/messages'
   id:
     | '__root__'
     | '/'
@@ -98,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/history'
     | '/api/chat'
+    | '/_authenticated/messages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -159,17 +178,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/messages/': {
+      id: '/_authenticated/messages/'
+      path: '/messages'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthenticatedMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
