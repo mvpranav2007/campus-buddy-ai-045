@@ -17,6 +17,8 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages.index'
+import { Route as AuthenticatedMessagesNewRouteImport } from './routes/_authenticated/messages.new'
+import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages.$conversationId'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -58,6 +60,18 @@ const AuthenticatedMessagesIndexRoute =
     path: '/messages/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMessagesNewRoute =
+  AuthenticatedMessagesNewRouteImport.update({
+    id: '/messages/new',
+    path: '/messages/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMessagesConversationIdRoute =
+  AuthenticatedMessagesConversationIdRouteImport.update({
+    id: '/messages/$conversationId',
+    path: '/messages/$conversationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AuthenticatedChatRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
+  '/messages/new': typeof AuthenticatedMessagesNewRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -75,6 +91,8 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
+  '/messages/new': typeof AuthenticatedMessagesNewRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRoutesById {
@@ -86,6 +104,8 @@ export interface FileRoutesById {
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
+  '/_authenticated/messages/new': typeof AuthenticatedMessagesNewRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
 }
 export interface FileRouteTypes {
@@ -97,6 +117,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/history'
     | '/api/chat'
+    | '/messages/$conversationId'
+    | '/messages/new'
     | '/messages/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -106,6 +128,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/history'
     | '/api/chat'
+    | '/messages/$conversationId'
+    | '/messages/new'
     | '/messages'
   id:
     | '__root__'
@@ -116,6 +140,8 @@ export interface FileRouteTypes {
     | '/_authenticated/chat'
     | '/_authenticated/history'
     | '/api/chat'
+    | '/_authenticated/messages/$conversationId'
+    | '/_authenticated/messages/new'
     | '/_authenticated/messages/'
   fileRoutesById: FileRoutesById
 }
@@ -185,18 +211,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/messages/new': {
+      id: '/_authenticated/messages/new'
+      path: '/messages/new'
+      fullPath: '/messages/new'
+      preLoaderRoute: typeof AuthenticatedMessagesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/messages/$conversationId': {
+      id: '/_authenticated/messages/$conversationId'
+      path: '/messages/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof AuthenticatedMessagesConversationIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
+  AuthenticatedMessagesNewRoute: typeof AuthenticatedMessagesNewRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedMessagesConversationIdRoute:
+    AuthenticatedMessagesConversationIdRoute,
+  AuthenticatedMessagesNewRoute: AuthenticatedMessagesNewRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
 }
 
