@@ -121,7 +121,7 @@ function DirectMessageForm() {
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by email (min 2 characters)…"
+          placeholder="Enter a user's exact email…"
           className="pl-9"
         />
       </div>
@@ -129,7 +129,7 @@ function DirectMessageForm() {
         <div className="flex items-center gap-2 px-1 py-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" /> Searching…
         </div>
-      ) : results.length === 0 && query.trim().length >= 2 ? (
+      ) : results.length === 0 && query.trim().length >= 3 ? (
         <p className="px-1 py-2 text-sm text-muted-foreground">No users match “{query}”.</p>
       ) : (
         <ul className="space-y-1.5">
@@ -143,12 +143,11 @@ function DirectMessageForm() {
               >
                 <Avatar className="size-10">
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {(p.display_name || p.email || "?").slice(0, 2).toUpperCase()}
+                    {(p.display_name || "?").slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{p.display_name || p.email}</div>
-                  <div className="truncate text-xs text-muted-foreground">{p.email}</div>
+                  <div className="truncate text-sm font-medium">{p.display_name || "Student"}</div>
                 </div>
                 {starting === p.id ? <Loader2 className="size-4 animate-spin" /> : null}
               </button>
@@ -205,7 +204,7 @@ function GroupForm() {
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-secondary-foreground hover:bg-secondary/80"
             >
               <Check className="size-3" />
-              {p.display_name || p.email}
+              {p.display_name || "Student"}
               <span className="text-muted-foreground">×</span>
             </button>
           ))}
@@ -217,7 +216,7 @@ function GroupForm() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Add members by email…"
+          placeholder="Add members by exact email…"
           className="pl-9"
         />
       </div>
@@ -240,12 +239,11 @@ function GroupForm() {
               >
                 <Avatar className="size-8">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                    {(p.display_name || p.email || "?").slice(0, 2).toUpperCase()}
+                    {(p.display_name || "?").slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{p.display_name || p.email}</div>
-                  <div className="truncate text-xs text-muted-foreground">{p.email}</div>
+                  <div className="truncate text-sm font-medium">{p.display_name || "Student"}</div>
                 </div>
               </button>
             </li>
