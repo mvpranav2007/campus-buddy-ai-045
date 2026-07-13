@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.search_users_by_email(text);
