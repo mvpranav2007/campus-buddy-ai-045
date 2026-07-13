@@ -215,14 +215,20 @@ export async function uploadFileAndSend(params: {
 
 export async function searchProfilesByEmail(query: string, excludeIds: string[] = []) {
   const q = query.trim();
-  if (q.length < 2) return [];
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, display_name, avatar_url")
-    .ilike("email", `%${q}%`)
-    .limit(10);
+  if (q.length < 3) return [];
+  // Uses a SECURITY DEFINER RPC so we can look up a user by exact email
+  // without exposing the profiles.email column to all authenticated users.
+  // Returns id/display_name/avatar_url only — never email.
+  const { data, error } = await supabase.rpc("search_users_by_email", { q });
   if (error) throw error;
-  return (data ?? []).filter((p) => !excludeIds.includes(p.id));
+  return (data ?? [])
+    .filter((p: { id: string }) => !excludeIds.includes(p.id))
+    .map((p: { id: string; display_name: string | null; avatar_url: string | null }) => ({
+      id: p.id,
+      email: null as string | null,
+      display_name: p.display_name,
+      avatar_url: p.avatar_url,
+    }));
 }
 
 /** Ensure or create a DM between the current user and another user id. */
