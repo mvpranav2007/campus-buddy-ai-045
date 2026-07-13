@@ -173,14 +173,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      search_users_by_email: {
-        Args: { q: string }
-        Returns: {
-          avatar_url: string
-          display_name: string
-          id: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       conversation_type: "dm" | "group"
